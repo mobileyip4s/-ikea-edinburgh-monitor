@@ -1,0 +1,43 @@
+name: IKEA Edinburgh Re-shop monitor
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Run monitor
+        env:
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+        run: python monitor.py
+
+      - name: Save state
+        run: |
+          git config user.name "ikea-monitor-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/seen_items.json
+          git diff --cached --quiet || git commit -m "Update IKEA Edinburgh monitor state"
+          git push
