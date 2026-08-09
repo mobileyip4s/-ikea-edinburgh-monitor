@@ -38,6 +38,9 @@ jobs:
         run: |
           git config user.name "ikea-monitor-bot"
           git config user.email "actions@users.noreply.github.com"
+
           git add data/seen_items.json
           git diff --cached --quiet || git commit -m "Update IKEA Edinburgh monitor state"
-          git push
+
+          git pull --rebase origin main
+          git push origin main
